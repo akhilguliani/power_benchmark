@@ -83,7 +83,7 @@ void print_matrix(const float *A, int nr_rows_A, int nr_cols_A) {
     std::cout << std::endl;
 }
 
-int main() {
+int def(int value, int reps) {
 
   cudaStream_t computeStream;
   cudaError_t result;
@@ -93,7 +93,7 @@ int main() {
 	int nr_rows_A, nr_cols_A, nr_rows_B, nr_cols_B, nr_rows_C, nr_cols_C;
 
 	// for simplicity we are going to use square arrays
-	nr_rows_A = nr_cols_A = nr_rows_B = nr_cols_B = nr_rows_C = nr_cols_C = 2048;
+	nr_rows_A = nr_cols_A = nr_rows_B = nr_cols_B = nr_rows_C = nr_cols_C = value;
 	
 	float *h_A = (float *)malloc(nr_rows_A * nr_cols_A * sizeof(float));
 	float *h_B = (float *)malloc(nr_rows_B * nr_cols_B * sizeof(float));
@@ -126,7 +126,7 @@ int main() {
   cublasCreate(&handle);
   cublasSetStream(handle, computeStream);
 
-  for (int i=0; i< 10000; i++){
+  for (int i=0; i< reps; i++){
 	// Multiply A and B on GPU
   gpu_blas_mmul(handle, d_A, d_B, d_C, nr_rows_A, nr_cols_A, nr_cols_B);
   
@@ -144,7 +144,7 @@ int main() {
 	//Free GPU memory
 	cudaFree(d_A);
 	cudaFree(d_B);
-  cudaFree(d_C);
+   cudaFree(d_C);
   
   result = cudaStreamDestroy(computeStream);
 
@@ -153,5 +153,14 @@ int main() {
 	free(h_B);
 	free(h_C);
 
+	return 0;
+}
+
+int main(){
+	// for (int i=100; i <= 100000; i = i*10){
+	// 	std::cout << "\n\n\n" << i << "\n"; 
+	// 	def(1024, i);
+	// }
+	def(1024, 100000);
 	return 0;
 }

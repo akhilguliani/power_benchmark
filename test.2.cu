@@ -110,7 +110,7 @@ int main() {
 	int nr_rows_A, nr_cols_A, nr_rows_B, nr_cols_B, nr_rows_C, nr_cols_C;
 
 	// for simplicity we are going to use square arrays
-	nr_rows_A = nr_cols_A = nr_rows_B = nr_cols_B = nr_rows_C = nr_cols_C = 4096;
+	nr_rows_A = nr_cols_A = nr_rows_B = nr_cols_B = nr_rows_C = nr_cols_C = 1024;
 
 	float *h_A = (float *)malloc(nr_rows_A * nr_cols_A * sizeof(float));
 	float *h_B = (float *)malloc(nr_rows_B * nr_cols_B * sizeof(float));
@@ -147,7 +147,7 @@ int main() {
 	cudaDeviceSynchronize();
 
 	for (int j = 0 ; j < 100; j++){
-		for (int i=0; i< 100; i++){
+		for (int i=0; i< 1000; i++){
 			// Multiply A and B on GPU
 			gpu_blas_mmul(handle, d_A, d_B, d_C, nr_rows_A, nr_cols_A, nr_cols_B);
 		}
