@@ -95,8 +95,9 @@ int main() {
 
 	// Allocate the src on CPU
 	long SIZE = 512*1024*1024;
-	int* src = (int*) malloc(SIZE * sizeof(int));
-
+	// int* src = (int*) malloc(SIZE * sizeof(int));
+	int* src; 
+	cudaMallocHost((void**) &src, SIZE * sizeof(int));
 	for (int i = 0; i < SIZE ; ++i) {
 		src[i] = 5;
 	}
