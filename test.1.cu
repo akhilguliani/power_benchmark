@@ -66,7 +66,8 @@ void gpu_blas_mmul( cublasHandle_t handle, const float *A, const float *B, float
 
 	// Do the actual multiplication
   cublasStatus_t err = cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
-  std::cout << "Error: " <<  _cudaGetErrorEnum(err) << std::endl;
+  if (err != CUBLAS_STATUS_SUCCESS)
+  	std::cout << "Error: " <<  _cudaGetErrorEnum(err) << std::endl;
   
 }
 
@@ -156,11 +157,18 @@ int def(int value, int reps) {
 	return 0;
 }
 
-int main(){
+int main(int argc, char* argv[]){
 	// for (int i=100; i <= 100000; i = i*10){
 	// 	std::cout << "\n\n\n" << i << "\n"; 
 	// 	def(1024, i);
 	// }
-	def(1024, 100000);
+	if (argc != 3){
+		std::cout << "Usage: mul <dim> <reps>" << std::endl;
+		exit(-1);
+	}
+	int dim = atoi(argv[1]);
+	int reps = atoi(argv[2]);
+	//cout << dim <<
+	def(dim, reps);
 	return 0;
 }

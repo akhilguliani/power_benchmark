@@ -66,7 +66,8 @@ void gpu_blas_mmul( cublasHandle_t handle, const float *A, const float *B, float
 
 	// Do the actual multiplication
 	cublasStatus_t err = cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
-	std::cout << "Error: " <<  _cudaGetErrorEnum(err) << std::endl;
+  	if (err != CUBLAS_STATUS_SUCCESS)
+		std::cout << "Error: " <<  _cudaGetErrorEnum(err) << std::endl;
 
 }
 
@@ -83,23 +84,34 @@ void print_matrix(const float *A, int nr_rows_A, int nr_cols_A) {
 	std::cout << std::endl;
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+
+	if (argc != 3){
+		std::cout << "USAGE: " << argv[0] <<" <size> <inner-reps>" <<std::endl ;
+		exit(-1);
+	}
+	int size = atoi(argv[1]);
+	int reps = atoi(argv[2]);
 
 	cudaStream_t computeStream;
 	cudaError_t result;
 	result = cudaStreamCreate(&computeStream);
 
-	cudaStream_t copyStream;
+	cudaStream_t copyStream, copyStream2;
 	result = cudaStreamCreate(&copyStream);
+	result = cudaStreamCreate(&copyStream2);
 
 
 	// Allocate the src on CPU
 	long SIZE = 512*1024*1024;
 	// int* src = (int*) malloc(SIZE * sizeof(int));
 	int* src; 
+	int *dest_h; 
 	cudaMallocHost((void**) &src, SIZE * sizeof(int));
+	cudaMallocHost((void**) &dest_h, SIZE * sizeof(int));
 	for (int i = 0; i < SIZE ; ++i) {
 		src[i] = 5;
+		dest_h[i] = 1;
 	}
 
 	// Allocate DST on gpu	
@@ -111,7 +123,7 @@ int main() {
 	int nr_rows_A, nr_cols_A, nr_rows_B, nr_cols_B, nr_rows_C, nr_cols_C;
 
 	// for simplicity we are going to use square arrays
-	nr_rows_A = nr_cols_A = nr_rows_B = nr_cols_B = nr_rows_C = nr_cols_C = 1024;
+	nr_rows_A = nr_cols_A = nr_rows_B = nr_cols_B = nr_rows_C = nr_cols_C = size;
 
 	float *h_A = (float *)malloc(nr_rows_A * nr_cols_A * sizeof(float));
 	float *h_B = (float *)malloc(nr_rows_B * nr_cols_B * sizeof(float));
@@ -148,14 +160,19 @@ int main() {
 	cudaDeviceSynchronize();
 
 	for (int j = 0 ; j < 100; j++){
-		for (int i=0; i< 1000; i++){
-			// Multiply A and B on GPU
-			gpu_blas_mmul(handle, d_A, d_B, d_C, nr_rows_A, nr_cols_A, nr_cols_B);
+		// Tabkes about 5 minuets
+		gpu_blas_mmul(handle, d_A, d_B, d_C, nr_rows_A, nr_cols_A, nr_cols_B);
+		for (int i=0; i< reps; i++){
+			// each stable copy takes about 162 miliseconds
+			cudaMemcpyAsync((void*)src, (void*)dst, sizeof(int) * SIZE, cudaMemcpyDeviceToHost, copyStream);
+			// cudaMemcpyAsync((void*)dest_h, (void*)dst, sizeof(int) * SIZE, cudaMemcpyDeviceToHost, copyStream2);
 		}
-		cudaMemcpyAsync((void*)src, (void*)dst, sizeof(int) * SIZE, cudaMemcpyDeviceToHost, copyStream);
+        	cudaStreamSynchronize(copyStream);
+		// cudaStreamSynchronize(copyStream2);
 	}
 	cudaStreamSynchronize(computeStream);  
 	cudaStreamSynchronize(copyStream);
+	// cudaStreamSynchronize(copyStream2);
 
 	// Destroy the handle
 	cublasDestroy(handle);
