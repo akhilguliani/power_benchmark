@@ -6,6 +6,7 @@
 #include <ctime>
 #include <cublas_v2.h>
 #include <curand.h>
+#include <cmath>
 
 // Fill the array A(nr_rows_A, nr_cols_A) with random numbers on GPU
 void GPU_fill_rand(float *A, int nr_rows_A, int nr_cols_A) {
@@ -18,6 +19,22 @@ void GPU_fill_rand(float *A, int nr_rows_A, int nr_cols_A) {
 
 	// Fill the array with random numbers on the device
 	curandGenerateUniform(prng, A, nr_rows_A * nr_cols_A);
+}
+
+// Randomization helpers 
+// adapted from https://github.com/ROCmSoftwarePlatform/rocBLAS/blob/rocm-3.0/clients/include/rocblas_init.hpp#L42
+
+void fill_sin(float *A, size_t nr_rows_A, size_t nr_cols_A){
+    for(size_t i = 0; i < nr_rows_A; ++i)
+        for(size_t j = 0; j < nr_cols_A; ++j)
+	    A[i + j * nr_rows_A] = sin(float(i + j * nr_rows_A));
+}
+
+
+void fill_cos(float *A, size_t nr_rows_A, size_t nr_cols_A){
+    for(size_t i = 0; i < nr_rows_A; ++i)
+        for(size_t j = 0; j < nr_cols_A; ++j)
+	    A[i + j * nr_rows_A] = cos(float(i + j * nr_rows_A));
 }
 
 
@@ -213,12 +230,18 @@ int main(int argc, char* argv[]) {
 	// cudaMemcpy(d_B,h_B,nr_rows_B * nr_cols_B * sizeof(float),cudaMemcpyHostToDevice);
 
 	// Fill the arrays A and B on GPU with random numbers
-	GPU_fill_rand(d_A, nr_rows_A, nr_cols_A);
-	GPU_fill_rand(d_B, nr_rows_B, nr_cols_B);
+	// GPU_fill_rand(d_A, nr_rows_A, nr_cols_A);
+	// GPU_fill_rand(d_B, nr_rows_B, nr_cols_B);
+	fill_sin(h_A, nr_rows_A, nr_cols_A);
+	fill_cos(h_B, nr_rows_B, nr_cols_B);
 
 	// Optionally we can copy the data back on CPU and print the arrays
-	cudaMemcpyAsync(h_A,d_A,nr_rows_A * nr_cols_A * sizeof(float),cudaMemcpyDeviceToHost, computeStream);
-	cudaMemcpyAsync(h_B,d_B,nr_rows_B * nr_cols_B * sizeof(float),cudaMemcpyDeviceToHost, computeStream);
+	cudaMemcpyAsync(d_A,h_A,nr_rows_A * nr_cols_A * sizeof(float),cudaMemcpyHostToDevice, computeStream);
+	cudaMemcpyAsync(d_B,h_B,nr_rows_B * nr_cols_B * sizeof(float),cudaMemcpyHostToDevice, computeStream);
+
+	// Optionally we can copy the data back on CPU and print the arrays
+	// cudaMemcpyAsync(h_A,d_A,nr_rows_A * nr_cols_A * sizeof(float),cudaMemcpyDeviceToHost, computeStream);
+	// cudaMemcpyAsync(h_B,d_B,nr_rows_B * nr_cols_B * sizeof(float),cudaMemcpyDeviceToHost, computeStream);
 	std::cout << "A =" << std::endl;
 	// print_matrix(h_A, nr_rows_A, nr_cols_A);
 	std::cout << "B =" << std::endl;
