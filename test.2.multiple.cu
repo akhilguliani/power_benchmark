@@ -337,15 +337,19 @@ int main(int argc, char* argv[]) {
 					gpu_blas_mmul(handle, d_A_3, d_B_3, d_C_3, nr_rows_A, nr_cols_A, nr_cols_B);
 					break;
 			}
-			// Create a handle for CUBLAS	        
-			cudaStreamSynchronize(copyStream);
-			cudaStreamSynchronize(copyStream2);
-			cudaStreamSynchronize(copyStream3);
-			cudaStreamSynchronize(copyStream4);
+			// Create a handle for CUBLAS
 		}
+		cudaSetDevice(0);
+		cudaStreamSynchronize(copyStream);
+		cudaStreamSynchronize(copyStream2);
+		cudaStreamSynchronize(copyStream3);
+		cudaStreamSynchronize(copyStream4);
 
 	}
-	cudaStreamSynchronize(computeStream);  
+	cudaStreamSynchronize(computeStream);
+	cudaStreamSynchronize(compStrm1);
+	cudaStreamSynchronize(compStrm2);
+	cudaStreamSynchronize(compStrm3);  
 	cudaStreamSynchronize(copyStream);
 	cudaStreamSynchronize(copyStream2);
 	cudaStreamSynchronize(copyStream3);
@@ -354,10 +358,20 @@ int main(int argc, char* argv[]) {
 	// Destroy the handle
 	cublasDestroy(handle);
 
+
 	// Copy (and print) the result on host memory
 	cudaMemcpyAsync(h_C,d_C,nr_rows_C * nr_cols_C * sizeof(float),cudaMemcpyDeviceToHost, computeStream);
 	std::cout << "C =" << std::endl;
 	// print_matrix(h_C, nr_rows_C, nr_cols_C);
+
+	cudaMemcpyAsync(h_C,d_C_1,nr_rows_C * nr_cols_C * sizeof(float),cudaMemcpyDeviceToHost, compStrm1);
+	std::cout << "C =" << std::endl;
+
+	cudaMemcpyAsync(h_C,d_C_2,nr_rows_C * nr_cols_C * sizeof(float),cudaMemcpyDeviceToHost, compStrm1);
+	std::cout << "C =" << std::endl;
+
+	cudaMemcpyAsync(h_C,d_C_3,nr_rows_C * nr_cols_C * sizeof(float),cudaMemcpyDeviceToHost, compStrm1);
+	std::cout << "C =" << std::endl;
 
 	//Free GPU memory
 	cudaFree(d_A);
@@ -370,15 +384,33 @@ int main(int argc, char* argv[]) {
 
 	cudaSetDevice(1);
 	cudaFree(src_1);
+	cudaFree(d_A_1);
+	cudaFree(d_B_1);
+	cudaFree(d_C_1);
+	cublasDestroy(handle1);
+
+
 
 	cudaSetDevice(2);
 	cudaFree(src_2);
+	cudaFree(d_A_2);
+	cudaFree(d_B_2);
+	cudaFree(d_C_2);
+	cublasDestroy(handle2);
+
 
 	cudaSetDevice(3);
 	cudaFree(src_3);
+	cudaFree(d_A_3);
+	cudaFree(d_B_3);
+	cudaFree(d_C_3);
+	cublasDestroy(handle3);
 
 
 	result = cudaStreamDestroy(computeStream);
+	result = cudaStreamDestroy(compStrm1);
+	result = cudaStreamDestroy(compStrm2);
+	result = cudaStreamDestroy(compStrm3);
 	result = cudaStreamDestroy(copyStream);
 	result = cudaStreamDestroy(copyStream2);
 	result = cudaStreamDestroy(copyStream3);
