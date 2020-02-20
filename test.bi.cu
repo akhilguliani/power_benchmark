@@ -169,7 +169,7 @@ int main(int argc, char* argv[]) {
 	    	       cudaMemcpyAsync((void*)src_3, (void*)dst, sizeof(int)*SIZE , cudaMemcpyDeviceToDevice, copyStream4);
 		}
 		if (j == 1){
-		   cudaSetDevice(j)
+		   cudaSetDevice(j);
 		}
 		
 	    }        

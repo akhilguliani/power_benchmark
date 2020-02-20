@@ -1,4 +1,7 @@
-all: test test1
+all: test test1 test2 testBi
+
+testBi: test.bi.cu
+	nvcc -o $@ $< -lcurand -lcudart -lcublas
 
 test2: test.2.cu
 	nvcc -o $@ $< -lcurand -lcudart -lcublas
