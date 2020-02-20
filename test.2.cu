@@ -171,7 +171,7 @@ int main(int argc, char* argv[]) {
 	cudaMallocHost((void**) &src, SIZE * sizeof(int));
 	cudaMallocHost((void**) &dest_h, SIZE * sizeof(int));
 	for (int i = 0; i < SIZE ; ++i) {
-		src[i] = 5;
+		src[i] = sin(i);
 		dest_h[i] = 1;
 	}
 
