@@ -284,7 +284,7 @@ int main(int argc, char* argv[]) {
 	
 	cudaSetDevice(0);
 	// Create a handle for CUBLAS
-	cublasHandle_t handle[4];
+	cublasHandle_t handle, handle1, handle2, handle3;
 	cublasCreate(&handle);
 	cublasSetStream(handle, computeStream);
 
