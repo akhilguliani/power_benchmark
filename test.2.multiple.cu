@@ -325,16 +325,16 @@ int main(int argc, char* argv[]) {
 				
 				case 1:
 					cudaSetDevice(gpu);
-					gpu_blas_mmul(handle, d_A_1, d_B_1, d_C_1, nr_rows_A, nr_cols_A, nr_cols_B);
+					gpu_blas_mmul(handle1, d_A_1, d_B_1, d_C_1, nr_rows_A, nr_cols_A, nr_cols_B);
 					break;
 				
 				case 2:
 					cudaSetDevice(gpu);
-					gpu_blas_mmul(handle, d_A_2, d_B_2, d_C_2, nr_rows_A, nr_cols_A, nr_cols_B);
+					gpu_blas_mmul(handle2, d_A_2, d_B_2, d_C_2, nr_rows_A, nr_cols_A, nr_cols_B);
 					break;
 				case 3:
 					cudaSetDevice(gpu);
-					gpu_blas_mmul(handle, d_A_3, d_B_3, d_C_3, nr_rows_A, nr_cols_A, nr_cols_B);
+					gpu_blas_mmul(handle3, d_A_3, d_B_3, d_C_3, nr_rows_A, nr_cols_A, nr_cols_B);
 					break;
 			}
 			// Create a handle for CUBLAS
