@@ -236,8 +236,10 @@ int main(int argc, char* argv[]) {
 	cudaMemcpyAsync(d_A,h_A,nr_rows_A * nr_cols_A * sizeof(float),cudaMemcpyHostToDevice, computeStream);
 	cudaMemcpyAsync(d_B,h_B,nr_rows_B * nr_cols_B * sizeof(float),cudaMemcpyHostToDevice, computeStream);
 	cudaMemcpyAsync(d_C,h_A,nr_rows_B * nr_cols_B * sizeof(float),cudaMemcpyHostToDevice, computeStream);
+	cudaDeviceSynchronize();
 
 	cudaSetDevice(1);
+	cudaDeviceSynchronize();
 	// Allocate 3 arrays on GPU
 	float *d_A_1, *d_B_1, *d_C_1;
 	cudaMalloc(&d_A_1,nr_rows_A * nr_cols_A * sizeof(float));
@@ -251,6 +253,7 @@ int main(int argc, char* argv[]) {
 	cudaDeviceSynchronize();
 
 	cudaSetDevice(2);
+	cudaDeviceSynchronize();
 	// Allocate 3 arrays on GPU
 	float *d_A_2, *d_B_2, *d_C_2;
 	cudaMalloc(&d_A_2,nr_rows_A * nr_cols_A * sizeof(float));
@@ -264,6 +267,8 @@ int main(int argc, char* argv[]) {
 	cudaDeviceSynchronize();
 
 	cudaSetDevice(3);
+
+	cudaDeviceSynchronize();
 	// Allocate 3 arrays on GPU
 	float *d_A_3, *d_B_3, *d_C_3;
 	cudaMalloc(&d_A_3,nr_rows_A * nr_cols_A * sizeof(float));
@@ -284,30 +289,37 @@ int main(int argc, char* argv[]) {
 	
 	cudaSetDevice(0);
 	// Create a handle for CUBLAS
-	cublasHandle_t handle, handle1, handle2, handle3;
+	cublasHandle_t handle;
 	cublasCreate(&handle);
 	cublasSetStream(handle, computeStream);
+	cudaDeviceSynchronize();
 
 	cudaSetDevice(1);
+	cublasHandle_t handle1;
 	cublasCreate(&handle1);
 	cublasSetStream(handle, compStrm1);
+	cudaDeviceSynchronize();
 
 	cudaSetDevice(2);
+	cublasHandle_t handle2;
 	cublasCreate(&handle2);
 	cublasSetStream(handle, compStrm2);
+	cudaDeviceSynchronize();
 
 	cudaSetDevice(3);
+	cublasHandle_t handle3;
 	cublasCreate(&handle3);
 	cublasSetStream(handle, compStrm3);
-
 	cudaDeviceSynchronize();
+
+	cudaSetDevice(0);
 
 	for (int j = 0 ; j < 100; j++){
 		for (int gpu=0; gpu <= nlinks; gpu++){ 
 			switch(gpu){
 				case 0:
 					// Takes about 5 minuets
-					cudaSetDevice(gpu);
+					cudaSetDevice(0);
 					gpu_blas_mmul(handle, d_A, d_B, d_C, nr_rows_A, nr_cols_A, nr_cols_B);
 					for (int i=0; i< reps; i++){
 						// each stable copy takes about 162 miliseconds
@@ -324,16 +336,16 @@ int main(int argc, char* argv[]) {
 					break;
 				
 				case 1:
-					cudaSetDevice(gpu);
+					cudaSetDevice(1);
 					gpu_blas_mmul(handle1, d_A_1, d_B_1, d_C_1, nr_rows_A, nr_cols_A, nr_cols_B);
 					break;
 				
 				case 2:
-					cudaSetDevice(gpu);
+					cudaSetDevice(2);
 					gpu_blas_mmul(handle2, d_A_2, d_B_2, d_C_2, nr_rows_A, nr_cols_A, nr_cols_B);
 					break;
 				case 3:
-					cudaSetDevice(gpu);
+					cudaSetDevice(3);
 					gpu_blas_mmul(handle3, d_A_3, d_B_3, d_C_3, nr_rows_A, nr_cols_A, nr_cols_B);
 					break;
 			}
@@ -346,15 +358,22 @@ int main(int argc, char* argv[]) {
 		cudaStreamSynchronize(copyStream4);
 
 	}
+
 	cudaStreamSynchronize(computeStream);
-	cudaStreamSynchronize(compStrm1);
-	cudaStreamSynchronize(compStrm2);
-	cudaStreamSynchronize(compStrm3);  
 	cudaStreamSynchronize(copyStream);
 	cudaStreamSynchronize(copyStream2);
 	cudaStreamSynchronize(copyStream3);
 	cudaStreamSynchronize(copyStream4);
-
+	
+	cudaSetDevice(1);
+	cudaStreamSynchronize(compStrm1);
+	cudaSetDevice(2);
+	cudaStreamSynchronize(compStrm2);
+	cudaSetDevice(3);
+	cudaStreamSynchronize(compStrm3);  
+	
+	cudaSetDevice(0);
+	cudaDeviceSynchronize();
 	// Destroy the handle
 	cublasDestroy(handle);
 
@@ -364,14 +383,14 @@ int main(int argc, char* argv[]) {
 	std::cout << "C =" << std::endl;
 	// print_matrix(h_C, nr_rows_C, nr_cols_C);
 
-	cudaMemcpyAsync(h_C,d_C_1,nr_rows_C * nr_cols_C * sizeof(float),cudaMemcpyDeviceToHost, compStrm1);
-	std::cout << "C =" << std::endl;
+	// cudaMemcpyAsync(h_C,d_C_1,nr_rows_C * nr_cols_C * sizeof(float),cudaMemcpyDeviceToHost, compStrm1);
+	// std::cout << "C =" << std::endl;
 
-	cudaMemcpyAsync(h_C,d_C_2,nr_rows_C * nr_cols_C * sizeof(float),cudaMemcpyDeviceToHost, compStrm1);
-	std::cout << "C =" << std::endl;
+	// cudaMemcpyAsync(h_C,d_C_2,nr_rows_C * nr_cols_C * sizeof(float),cudaMemcpyDeviceToHost, compStrm1);
+	// std::cout << "C =" << std::endl;
 
-	cudaMemcpyAsync(h_C,d_C_3,nr_rows_C * nr_cols_C * sizeof(float),cudaMemcpyDeviceToHost, compStrm1);
-	std::cout << "C =" << std::endl;
+	// cudaMemcpyAsync(h_C,d_C_3,nr_rows_C * nr_cols_C * sizeof(float),cudaMemcpyDeviceToHost, compStrm1);
+	// std::cout << "C =" << std::endl;
 
 	//Free GPU memory
 	cudaFree(d_A);
@@ -388,6 +407,7 @@ int main(int argc, char* argv[]) {
 	cudaFree(d_B_1);
 	cudaFree(d_C_1);
 	cublasDestroy(handle1);
+	result = cudaStreamDestroy(compStrm1);
 
 
 
@@ -397,6 +417,7 @@ int main(int argc, char* argv[]) {
 	cudaFree(d_B_2);
 	cudaFree(d_C_2);
 	cublasDestroy(handle2);
+	result = cudaStreamDestroy(compStrm2);
 
 
 	cudaSetDevice(3);
@@ -405,12 +426,10 @@ int main(int argc, char* argv[]) {
 	cudaFree(d_B_3);
 	cudaFree(d_C_3);
 	cublasDestroy(handle3);
-
-
-	result = cudaStreamDestroy(computeStream);
-	result = cudaStreamDestroy(compStrm1);
-	result = cudaStreamDestroy(compStrm2);
 	result = cudaStreamDestroy(compStrm3);
+
+	cudaSetDevice(0);
+	result = cudaStreamDestroy(computeStream);
 	result = cudaStreamDestroy(copyStream);
 	result = cudaStreamDestroy(copyStream2);
 	result = cudaStreamDestroy(copyStream3);
