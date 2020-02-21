@@ -315,48 +315,36 @@ int main(int argc, char* argv[]) {
 	cudaSetDevice(0);
 
 	for (int j = 0 ; j < 100; j++){
-		for (int gpu=0; gpu <= nlinks; gpu++){ 
-			switch(gpu){
-				case 0:
-					// Takes about 5 minuets
-					cudaSetDevice(0);
-					gpu_blas_mmul(handle, d_A, d_B, d_C, nr_rows_A, nr_cols_A, nr_cols_B);
-					for (int i=0; i< reps; i++){
-						// each stable copy takes about 162 miliseconds
-						// cudaMemcpyAsync((void*)src, (void*)dst, sizeof(int) * SIZE, cudaMemcpyDeviceToHost, copyStream);
-						// cudaMemcpyAsync((void*)dest_h, (void*)dst, sizeof(int) * SIZE, cudaMemcpyDeviceToHost, copyStream2);
-						if (nlinks >=1)  
-							cudaMemcpyAsync((void*)src_1, (void*)dst, sizeof(int)*SIZE , cudaMemcpyDeviceToDevice, copyStream2);
-						if (nlinks >= 2)
-							cudaMemcpyAsync((void*)src_2, (void*)dst, sizeof(int)*SIZE , cudaMemcpyDeviceToDevice, copyStream3);
-						if (nlinks >= 3)
-							cudaMemcpyAsync((void*)src_3, (void*)dst, sizeof(int)*SIZE , cudaMemcpyDeviceToDevice, copyStream4);
+		// Takes about 5 minuets
+		cudaSetDevice(0);
+		gpu_blas_mmul(handle, d_A, d_B, d_C, nr_rows_A, nr_cols_A, nr_cols_B);
+		for (int i=0; i< reps; i++){
+			// each stable copy takes about 162 miliseconds
+			// cudaMemcpyAsync((void*)src, (void*)dst, sizeof(int) * SIZE, cudaMemcpyDeviceToHost, copyStream);
+			// cudaMemcpyAsync((void*)dest_h, (void*)dst, sizeof(int) * SIZE, cudaMemcpyDeviceToHost, copyStream2);
+			if (nlinks >=1)  
+				cudaMemcpyAsync((void*)src_1, (void*)dst, sizeof(int)*SIZE , cudaMemcpyDeviceToDevice, copyStream2);
+			if (nlinks >= 2)
+				cudaMemcpyAsync((void*)src_2, (void*)dst, sizeof(int)*SIZE , cudaMemcpyDeviceToDevice, copyStream3);
+			if (nlinks >= 3)
+				cudaMemcpyAsync((void*)src_3, (void*)dst, sizeof(int)*SIZE , cudaMemcpyDeviceToDevice, copyStream4);
 
-					}
-					break;
-				
-				case 1:
-					cudaSetDevice(1);
-					gpu_blas_mmul(handle1, d_A_1, d_B_1, d_C_1, nr_rows_A, nr_cols_A, nr_cols_B);
-					break;
-				
-				case 2:
-					cudaSetDevice(2);
-					gpu_blas_mmul(handle2, d_A_2, d_B_2, d_C_2, nr_rows_A, nr_cols_A, nr_cols_B);
-					break;
-				case 3:
-					cudaSetDevice(3);
-					gpu_blas_mmul(handle3, d_A_3, d_B_3, d_C_3, nr_rows_A, nr_cols_A, nr_cols_B);
-					break;
-			}
-			// Create a handle for CUBLAS
 		}
+		cudaSetDevice(1);
+		gpu_blas_mmul(handle1, d_A_1, d_B_1, d_C_1, nr_rows_A, nr_cols_A, nr_cols_B);
+
+		cudaSetDevice(2);
+		gpu_blas_mmul(handle2, d_A_2, d_B_2, d_C_2, nr_rows_A, nr_cols_A, nr_cols_B);
+		
+		cudaSetDevice(3);
+		gpu_blas_mmul(handle3, d_A_3, d_B_3, d_C_3, nr_rows_A, nr_cols_A, nr_cols_B);
+		
+		// Create a handle for CUBLAS
 		cudaSetDevice(0);
 		cudaStreamSynchronize(copyStream);
 		cudaStreamSynchronize(copyStream2);
 		cudaStreamSynchronize(copyStream3);
 		cudaStreamSynchronize(copyStream4);
-
 	}
 
 	cudaStreamSynchronize(computeStream);
