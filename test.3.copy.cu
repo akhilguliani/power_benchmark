@@ -6,6 +6,7 @@
 #include <ctime>
 #include <cublas_v2.h>
 #include <curand.h>
+#include <cmath>
 
 //Print matrix A(nr_rows_A, nr_cols_A) storage in column-major format
 void print_matrix(const float *A, int nr_rows_A, int nr_cols_A) {
@@ -29,7 +30,7 @@ void print_matrix(const float *A, int nr_rows_A, int nr_cols_A) {
 }
 
 
-void setup_nvlink(gpu){
+void setup_nvlink(int gpu){
 	int numGPUs = 4;
 
 	int i = gpu;
